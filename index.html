@@ -1,0 +1,774 @@
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>חבר האחוזים!</title>
+    <script type="importmap">
+    {
+        "imports": {
+            "canvas-confetti": "https://cdn.skypack.dev/canvas-confetti@1"
+        }
+    }
+    </script>
+    <style>
+        body {
+            font-family: 'Noto Sans Hebrew', 'Rubik', 'Arial', 'Comic Sans MS', 'Chalkboard SE', 'Marker Felt', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%);
+            margin: 0;
+            color: #333;
+            text-align: center;
+            padding: 10px;
+            direction: rtl;
+        }
+
+        .container {
+            background-color: #ffffff;
+            padding: 20px 25px;
+            border-radius: 25px;
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+            width: 90%;
+            max-width: 600px;
+            border: 5px solid #ffccf9;
+        }
+
+        h1 {
+            color: #ff6347;
+            margin-bottom: 15px;
+            font-size: 2em;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+        }
+
+        #setup-screen, #end-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+
+        #setup-screen div {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            margin-bottom: 10px;
+            width: 100%;
+        }
+        
+        #setup-screen label {
+            font-weight: bold;
+            color: #555;
+            font-size: 1.1em;
+        }
+
+        #student-name, #num-questions {
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            font-size: 1em;
+            width: 80%;
+            max-width: 300px;
+            box-sizing: border-box;
+        }
+        
+        #start-game-button, #play-again-button {
+            background-color: #ff6347;
+            color: white;
+            padding: 12px 25px;
+            font-size: 1.2em;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.1s ease;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-top: 10px;
+        }
+        #start-game-button:hover, #play-again-button:hover {
+            background-color: #e5533d;
+            transform: translateY(-2px);
+        }
+
+        .game-controls {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        #difficulty-display-container {
+            padding: 6px 12px;
+            background-color: #f0f8ff;
+            border-radius: 8px;
+            font-weight: bold;
+            color: #4682b4;
+            font-size: 0.95em;
+        }
+
+        #easier-button, #harder-button {
+            padding: 8px 15px;
+            font-size: 0.9em;
+            font-weight: bold;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.1s ease;
+            box-shadow: 0 3px 5px rgba(0,0,0,0.1);
+        }
+
+        #easier-button { background-color: #77dd77; }
+        #easier-button:hover:not(:disabled) { background-color: #68c068; transform: translateY(-1px); }
+        #harder-button { background-color: #ff6961; }
+        #harder-button:hover:not(:disabled) { background-color: #f05048; transform: translateY(-1px); }
+        #easier-button:disabled, #harder-button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+            transform: translateY(0);
+        }
+
+
+        #session-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            font-size: 1em;
+            color: #333;
+            font-weight: 500;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+        #session-info p {
+            margin: 3px 5px;
+        }
+
+        #timer-display, #current-question-count, #total-question-count {
+            font-weight: bold;
+            color: #ff69b4;
+            background-color: #fff0f5;
+            padding: 2px 6px;
+            border-radius: 5px;
+        }
+
+
+        #visual-area {
+            margin-bottom: 15px;
+            padding: 8px 0;
+        }
+
+        .bar-viz {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .bar-track {
+            width: 80%;
+            height: 35px;
+            background-color: #e0e0e0;
+            border-radius: 10px;
+            position: relative;
+            overflow: hidden;
+            border: 2px solid #cccccc;
+        }
+
+        .bar-fill {
+            height: 100%;
+            background-color: #4caf50;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 0.85em;
+            transition: width 0.5s ease-in-out;
+        }
+        .bar-fill span { padding: 0 5px; }
+        .bar-base-label { margin-top: 6px; font-size: 0.95em; color: #555; }
+
+        .game-area { margin-bottom: 15px; }
+
+        #question-text {
+            font-size: 1.4em;
+            color: #5a5a5a;
+            margin-bottom: 12px;
+            line-height: 1.3;
+            min-height: auto;
+            font-weight: bold;
+        }
+
+        #multiple-choice-area {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        .option-button {
+            padding: 10px 15px;
+            font-size: 1em;
+            font-weight: bold;
+            color: white;
+            background-color: #4682b4;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.1s ease;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            min-width: 70px;
+            text-align: center;
+        }
+        .option-button:hover { background-color: #5a9bd3; transform: translateY(-2px); }
+        .option-button:active { transform: translateY(0px); }
+        .option-button:disabled { background-color: #cccccc; cursor: not-allowed; transform: translateY(0); }
+
+        button { 
+            padding: 10px 20px;
+            font-size: 1em;
+            font-weight: bold;
+            color: white;
+            background-color: #ffb6c1;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.1s ease;
+            margin: 5px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        button:hover:not(:disabled) { background-color: #ffa0b0; transform: translateY(-2px); }
+        button:active:not(:disabled) { transform: translateY(0px); }
+        button:disabled { background-color: #dddddd; color: #888888; cursor: not-allowed; }
+
+        #next-question-button { color: #333; }
+
+        #feedback-area {
+            min-height: 40px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        #feedback-text { font-size: 1.2em; font-weight: bold; padding: 7px 12px; border-radius: 8px; }
+        .correct { color: #ffffff; background-color: #28a745; }
+        .incorrect { color: #ffffff; background-color: #dc3545; }
+
+        .score-area { font-size: 1.3em; color: #ff69b4; font-weight: bold; margin-top: 8px; }
+        #score { display: inline-block; padding: 4px 8px; background-color: #fffacd; border-radius: 8px; color: #ff69b4; min-width: 25px; text-align: center; }
+
+        #end-screen h1 { color: #4caf50; }
+        #end-screen p { font-size: 1.2em; color: #555; margin: 8px 0; }
+        #end-student-name, #end-score, #end-total-questions, #end-time { font-weight: bold; color: #ff6347; }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="setup-screen">
+            <h1>הכנה למשחק חבר האחוזים! </h1>
+            <div>
+                <label for="student-name">שם התלמיד/ה:</label>
+                <input type="text" id="student-name" placeholder="הכנס/י שם" value="תלמיד/ה אמיצ/ה">
+            </div>
+            <div>
+                <label for="num-questions">מספר שאלות (5-20):</label>
+                <select id="num-questions"></select>
+            </div>
+            <button id="start-game-button">התחל משחק!</button>
+        </div>
+
+        <div id="game-screen" style="display: none;">
+            <h1>חבר האחוזים! </h1>
+            <div class="game-controls">
+                 <button id="easier-button">קל יותר</button>
+                 <div id="difficulty-display-container">רמת קושי: <span id="difficulty-display-text">בינונית</span></div>
+                 <button id="harder-button">מאתגר יותר</button>
+            </div>
+            <div id="session-info">
+                <p>שאלה <span id="current-question-count">0</span>/<span id="total-question-count">0</span></p>
+                <p>זמן: <span id="timer-display">00:00</span></p>
+            </div>
+            <div id="visual-area">
+                <!-- Visual representation will be generated here -->
+            </div>
+            <div class="game-area">
+                <p id="question-text"></p>
+                <div id="multiple-choice-area">
+                    <!-- Answer option buttons will be generated here -->
+                </div>
+                <button id="next-question-button" style="display: none;">שאלה הבאה</button>
+            </div>
+            <div id="feedback-area">
+                <p id="feedback-text"></p>
+            </div>
+            <div class="score-area">
+                <p>ניקוד: <span id="score">0</span></p>
+            </div>
+        </div>
+
+        <div id="end-screen" style="display: none;">
+            <h1>כל הכבוד, <span id="end-student-name"></span>!</h1>
+            <p>סיימת <span id="end-total-questions"></span> שאלות.</p>
+            <p>הניקוד שלך: <span id="end-score"></span> מתוך <span id="end-total-possible-score"></span></p>
+            <p>זמן כולל: <span id="end-time"></span></p>
+            <button id="play-again-button">שחק/י שוב</button>
+        </div>
+    </div>
+    <script type="module">
+        import confetti from 'canvas-confetti';
+
+        const setupScreenElement = document.getElementById('setup-screen');
+        const gameScreenElement = document.getElementById('game-screen');
+        const endScreenElement = document.getElementById('end-screen');
+
+        const studentNameInputElement = document.getElementById('student-name');
+        const numQuestionsSelectElement = document.getElementById('num-questions');
+        const startGameButton = document.getElementById('start-game-button');
+        
+        const questionTextElement = document.getElementById('question-text');
+        const nextQuestionButton = document.getElementById('next-question-button');
+        const feedbackTextElement = document.getElementById('feedback-text');
+        const scoreElement = document.getElementById('score');
+        const visualAreaElement = document.getElementById('visual-area');
+        const multipleChoiceAreaElement = document.getElementById('multiple-choice-area');
+
+        const easierButton = document.getElementById('easier-button');
+        const harderButton = document.getElementById('harder-button');
+        const difficultyDisplayTextElement = document.getElementById('difficulty-display-text');
+        
+        const currentQuestionCountElement = document.getElementById('current-question-count');
+        const totalQuestionCountElement = document.getElementById('total-question-count');
+        const timerDisplayElement = document.getElementById('timer-display');
+
+        const endStudentNameElement = document.getElementById('end-student-name');
+        const endTotalQuestionsElement = document.getElementById('end-total-questions');
+        const endScoreElement = document.getElementById('end-score');
+        const endTimeElement = document.getElementById('end-time');
+        const endTotalPossibleScoreElement = document.getElementById('end-total-possible-score');
+        const playAgainButton = document.getElementById('play-again-button');
+
+        let currentCorrectAnswer = 0;
+        let currentBaseNumber = 0;
+        let currentPercentage = 0;
+        let score = 0;
+        let studentName = "";
+        let totalQuestionsSelected = 10;
+        let currentQuestionNumber = 0;
+        let startTime = 0;
+        let timerInterval = null;
+
+        const DIFFICULTY_LEVELS = [
+            { name: "קלה", percentages: [10, 20, 25, 50, 75, 100], baseMin: 10, baseMax: 80, forceIntegerResult: true, maxResult: 40 },
+            { name: "בינונית", percentages: [10, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 75, 80, 90], baseMin: 20, baseMax: 120, forceIntegerResult: true, maxResult: 60 },
+            { name: "מאתגרת", percentages: [5, 12, 15, 18, 22, 37, 40, 60, 65, 85, 110, 120], baseMin: 30, baseMax: 150, forceIntegerResult: false, maxResult: 100 }
+        ];
+        let currentDifficultyIndex = 1; 
+
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        let correctSoundBuffer = null;
+        let incorrectSoundBuffer = null;
+
+        async function loadSound(url) {
+            try {
+                const response = await fetch(url);
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status} for ${url}`);
+                const arrayBuffer = await response.arrayBuffer();
+                return await audioContext.decodeAudioData(arrayBuffer);
+            } catch (error) {
+                console.error(`Error loading sound ${url}:`, error);
+                return null;
+            }
+        }
+
+        function playSound(buffer) {
+            if (!buffer || !audioContext) return;
+            if (audioContext.state === 'suspended') {
+                audioContext.resume().catch(err => console.error("Error resuming AudioContext:", err));
+            }
+            try {
+                const source = audioContext.createBufferSource();
+                source.buffer = buffer;
+                source.connect(audioContext.destination);
+                source.start(0);
+            } catch (error) { console.error("Error playing sound:", error); }
+        }
+        
+        function formatTime(totalSeconds) {
+            const minutes = Math.floor(totalSeconds / 60);
+            const seconds = Math.floor(totalSeconds % 60);
+            return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        function updateTimerDisplay() {
+            const elapsedSeconds = (Date.now() - startTime) / 1000;
+            timerDisplayElement.textContent = formatTime(elapsedSeconds);
+        }
+
+        function startTimer() {
+            startTime = Date.now();
+            updateTimerDisplay(); 
+            timerInterval = setInterval(updateTimerDisplay, 1000);
+        }
+
+        function stopTimer() {
+            clearInterval(timerInterval);
+            timerInterval = null;
+            return (Date.now() - startTime) / 1000; 
+        }
+
+        function displayVisualRepresentation(percentage, baseNumber) {
+            visualAreaElement.innerHTML = `
+                <div class="bar-viz">
+                    <div class="bar-track">
+                        <div class="bar-fill" style="width: ${Math.min(100, percentage)}%;">
+                            <span>${percentage}%</span>
+                        </div>
+                    </div>
+                    <div class="bar-base-label">ערך כולל: ${baseNumber}</div>
+                </div>
+            `;
+            const barFill = visualAreaElement.querySelector('.bar-fill');
+            if (percentage >= 100) { 
+                barFill.style.borderRadius = '8px';
+            } else {
+                barFill.style.borderRadius = '0 8px 8px 0'; 
+            }
+             if (percentage > 100) { 
+                barFill.style.backgroundColor = '#ff8c00'; 
+            } else {
+                 barFill.style.backgroundColor = '#4caf50'; 
+            }
+        }
+
+        function generateMultipleChoiceOptions(correctAnswer, base, percentage) {
+            multipleChoiceAreaElement.innerHTML = '';
+            let options = new Set();
+            options.add(correctAnswer);
+            const currentDifficulty = DIFFICULTY_LEVELS[currentDifficultyIndex];
+
+            const distractorAttempts = [
+                c => c + (Math.floor(Math.random() * (currentDifficulty.forceIntegerResult ? 5 : 2.5)) + (currentDifficulty.forceIntegerResult ? 1 : 0.5)),
+                c => c - (Math.floor(Math.random() * (currentDifficulty.forceIntegerResult ? 5 : 2.5)) + (currentDifficulty.forceIntegerResult ? 1 : 0.5)),
+                c => c + (Math.floor(Math.random() * (currentDifficulty.forceIntegerResult ? 8 : 4)) + (currentDifficulty.forceIntegerResult ? 3 : 1.0)),
+                c => Math.round(base * ((percentage + (Math.random() < 0.5 ? 10 : -10)) / 100) * (currentDifficulty.forceIntegerResult ? 1 : 10)) / (currentDifficulty.forceIntegerResult ? 1 : 10),
+                c => Math.round(base * ((percentage + (Math.random() < 0.5 ? 5 : -5)) / 100) * (currentDifficulty.forceIntegerResult ? 1 : 10)) / (currentDifficulty.forceIntegerResult ? 1 : 10)
+            ];
+
+            for (let i = distractorAttempts.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [distractorAttempts[i], distractorAttempts[j]] = [distractorAttempts[j], distractorAttempts[i]];
+            }
+            
+            for (const attemptFn of distractorAttempts) {
+                if (options.size >= 4) break;
+                let distractor = attemptFn(correctAnswer);
+                if (currentDifficulty.forceIntegerResult) {
+                    distractor = Math.max(0, Math.round(distractor));
+                } else {
+                    distractor = Math.max(0, parseFloat(distractor.toFixed(1)));
+                }
+                
+                let tooClose = false;
+                for (let opt of options) {
+                    if (Math.abs(opt - distractor) < (currentDifficulty.forceIntegerResult ? 1 : 0.1)) {
+                         tooClose = true; break;
+                    }
+                }
+                if (distractor !== correctAnswer && !tooClose) { 
+                    options.add(distractor);
+                }
+            }
+
+            let fallbackCounter = 1;
+            while (options.size < 4) {
+                let fallbackOption;
+                if (currentDifficulty.forceIntegerResult) {
+                    fallbackOption = correctAnswer + fallbackCounter * (Math.random() < 0.5 ? 1 : -1) * (Math.floor(Math.random()*3)+1);
+                    fallbackOption = Math.max(0, Math.round(fallbackOption));
+                } else {
+                    let diff = (Math.floor(Math.random() * 5) + 1) * 0.5; 
+                    fallbackOption = correctAnswer + (Math.random() < 0.5 ? diff : -diff);
+                    fallbackOption = Math.max(0, parseFloat(fallbackOption.toFixed(1)));
+                }
+                
+                let tooClose = false;
+                for (let opt of options) {
+                    if (Math.abs(opt - fallbackOption) < (currentDifficulty.forceIntegerResult ? 1 : 0.1)) {
+                         tooClose = true; break;
+                    }
+                }
+                 if (fallbackOption !== correctAnswer && !tooClose) {
+                    options.add(fallbackOption);
+                }
+                fallbackCounter++;
+                if (fallbackCounter > 25) { 
+                    let finalAttempt = correctAnswer + (options.size % 2 === 0 ? 1 : -1) * (currentDifficulty.forceIntegerResult ? 1 : 0.1);
+                    if (currentDifficulty.forceIntegerResult) finalAttempt = Math.round(finalAttempt); else finalAttempt = parseFloat(finalAttempt.toFixed(1));
+                    if (!options.has(finalAttempt) && finalAttempt >=0) options.add(finalAttempt);
+                    if (options.size >= 4 || fallbackCounter > 30) break;
+                }
+            }
+            while (options.size < 4) {
+                let desperateOption = Math.max(0, correctAnswer + (Math.random() * 10 - 5));
+                if (currentDifficulty.forceIntegerResult) desperateOption = Math.round(desperateOption);
+                else desperateOption = parseFloat(desperateOption.toFixed(1));
+                
+                let uniqueEnough = true;
+                for (let opt of options) { if(Math.abs(opt - desperateOption) < 0.05) uniqueEnough = false; }
+                if(uniqueEnough) options.add(desperateOption); else options.add(parseFloat((Math.random()*100).toFixed(1))); 
+                 if (options.size >=4) break;
+            }
+
+
+            const optionsArray = Array.from(options).slice(0, 4);
+             if (!optionsArray.includes(correctAnswer) && optionsArray.length > 0) {
+                optionsArray[Math.floor(Math.random() * optionsArray.length)] = correctAnswer;
+            } else if (optionsArray.length === 0) {
+                 optionsArray.push(correctAnswer); 
+            }
+
+
+            for (let i = optionsArray.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [optionsArray[i], optionsArray[j]] = [optionsArray[j], optionsArray[i]];
+            }
+
+            optionsArray.forEach(option => {
+                const button = document.createElement('button');
+                button.classList.add('option-button');
+                button.textContent = option.toLocaleString('he-IL', {
+                    minimumFractionDigits: (currentDifficulty.forceIntegerResult || Number.isInteger(option)) ? 0 : 1,
+                    maximumFractionDigits: 1
+                });
+                button.addEventListener('click', () => handleOptionClick(option));
+                multipleChoiceAreaElement.appendChild(button);
+            });
+        }
+
+        function generateQuestion() {
+            currentQuestionNumber++;
+            currentQuestionCountElement.textContent = currentQuestionNumber;
+            
+            const difficulty = DIFFICULTY_LEVELS[currentDifficultyIndex];
+            difficultyDisplayTextElement.textContent = difficulty.name;
+            easierButton.disabled = (currentDifficultyIndex === 0);
+            harderButton.disabled = (currentDifficultyIndex === DIFFICULTY_LEVELS.length - 1);
+
+            currentPercentage = difficulty.percentages[Math.floor(Math.random() * difficulty.percentages.length)];
+            let result;
+            let attempts = 0;
+
+            do {
+                if (difficulty.forceIntegerResult) {
+                    let targetResult = Math.floor(Math.random() * (difficulty.maxResult - 3)) + 3;
+                    currentBaseNumber = (targetResult * 100) / currentPercentage;
+                } else {
+                    currentBaseNumber = Math.floor(Math.random() * (difficulty.baseMax - difficulty.baseMin + 1)) + difficulty.baseMin;
+                }
+                result = (currentPercentage / 100) * currentBaseNumber;
+                attempts++;
+            } while (
+                (difficulty.forceIntegerResult && (!Number.isInteger(currentBaseNumber) || currentBaseNumber < difficulty.baseMin || currentBaseNumber > difficulty.baseMax || currentBaseNumber === currentPercentage)) &&
+                attempts < 100
+            );
+            
+            if ((difficulty.forceIntegerResult && (!Number.isInteger(currentBaseNumber) || currentBaseNumber < difficulty.baseMin || currentBaseNumber > difficulty.baseMax)) && attempts >= 100 ) {
+                currentBaseNumber = difficulty.baseMin + Math.floor(Math.random() * ((difficulty.baseMax - difficulty.baseMin)/10)) * 10;
+                let pArray = [...difficulty.percentages].sort(() => 0.5 - Math.random());
+                let found = false;
+                for(let p of pArray){
+                    if(Number.isInteger((p/100)*currentBaseNumber)){
+                        currentPercentage = p;
+                        result = (p/100)*currentBaseNumber;
+                        found = true;
+                        break;
+                    }
+                }
+                if(!found){ 
+                    currentBaseNumber = [20,40,50,60,80,100][Math.floor(Math.random()*6)];
+                    currentPercentage = [10,20,25,50][Math.floor(Math.random()*4)];
+                    result = (currentPercentage/100)*currentBaseNumber;
+                }
+            }
+            
+            if (difficulty.forceIntegerResult) {
+                currentCorrectAnswer = Math.round(result);
+            } else {
+                currentCorrectAnswer = parseFloat(result.toFixed(1));
+                if (currentCorrectAnswer === 0 && result !== 0) currentCorrectAnswer = parseFloat(result.toFixed(2));
+                 if(Number.isInteger(currentCorrectAnswer) && Math.random() < 0.3) {
+                     currentBaseNumber += (Math.random() < 0.5 ? 1: -1) * (Math.floor(Math.random()*3)+1) ; 
+                     result = (currentPercentage / 100) * currentBaseNumber;
+                     currentCorrectAnswer = parseFloat(result.toFixed(1));
+                }
+            }
+
+            questionTextElement.textContent = `כמה הם ${currentPercentage}% מתוך ${currentBaseNumber}?`;
+            displayVisualRepresentation(currentPercentage, currentBaseNumber);
+            generateMultipleChoiceOptions(currentCorrectAnswer, currentBaseNumber, currentPercentage);
+
+            feedbackTextElement.textContent = '';
+            feedbackTextElement.className = '';
+            nextQuestionButton.style.display = 'none';
+            nextQuestionButton.disabled = true;
+            
+            const optionButtons = multipleChoiceAreaElement.querySelectorAll('.option-button');
+            optionButtons.forEach(btn => btn.disabled = false);
+        }
+
+        function handleOptionClick(selectedValue) {
+            if (audioContext.state === 'suspended') {
+                audioContext.resume().catch(err => console.error("Error resuming AudioContext:", err));
+            }
+
+            const isCorrect = Math.abs(selectedValue - currentCorrectAnswer) < 0.01;
+
+            if (isCorrect) {
+                feedbackTextElement.textContent = "נכון! כל הכבוד!";
+                feedbackTextElement.className = 'correct';
+                score++;
+                scoreElement.textContent = score;
+                playSound(correctSoundBuffer);
+                confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 }, colors: ['#ff6347', '#ffd700', '#32cd32', '#4682b4', '#ff69b4'] });
+            } else {
+                const difficulty = DIFFICULTY_LEVELS[currentDifficultyIndex];
+                let displayCorrectAnswer = currentCorrectAnswer.toLocaleString('he-IL', {
+                    minimumFractionDigits: (difficulty.forceIntegerResult || Number.isInteger(currentCorrectAnswer)) ? 0 : 1,
+                    maximumFractionDigits: 1
+                });
+                feedbackTextElement.textContent = `לא בדיוק. התשובה הנכונה היא ${displayCorrectAnswer}.`;
+                feedbackTextElement.className = 'incorrect';
+                playSound(incorrectSoundBuffer);
+            }
+
+            const optionButtons = multipleChoiceAreaElement.querySelectorAll('.option-button');
+            optionButtons.forEach(btn => {
+                btn.disabled = true;
+            });
+            
+            if (currentQuestionNumber >= totalQuestionsSelected) {
+                nextQuestionButton.textContent = "סיים משחק וראה תוצאות";
+            } else {
+                nextQuestionButton.textContent = "שאלה הבאה";
+            }
+            nextQuestionButton.style.display = 'inline-block';
+            nextQuestionButton.disabled = false;
+            nextQuestionButton.focus();
+        }
+        
+        function changeDifficulty(change) {
+            const newDifficultyIndex = currentDifficultyIndex + change;
+            if (newDifficultyIndex >= 0 && newDifficultyIndex < DIFFICULTY_LEVELS.length) {
+                currentDifficultyIndex = newDifficultyIndex;
+                difficultyDisplayTextElement.textContent = DIFFICULTY_LEVELS[currentDifficultyIndex].name;
+                easierButton.disabled = (currentDifficultyIndex === 0);
+                harderButton.disabled = (currentDifficultyIndex === DIFFICULTY_LEVELS.length - 1);
+            }
+        }
+
+        easierButton.addEventListener('click', () => changeDifficulty(-1));
+        harderButton.addEventListener('click', () => changeDifficulty(1));
+
+        nextQuestionButton.addEventListener('click', () => {
+            nextQuestionButton.disabled = true; 
+            if (currentQuestionNumber >= totalQuestionsSelected) {
+                endGame();
+            } else {
+                generateQuestion();
+            }
+        });
+        
+        document.addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                 if (gameScreenElement.style.display !== 'none' && nextQuestionButton.style.display !== 'none' && !nextQuestionButton.disabled) {
+                    nextQuestionButton.click();
+                } else if (setupScreenElement.style.display !== 'none' && startGameButton.style.display !== 'none' && !startGameButton.disabled) {
+                     startGameButton.click();
+                } else if (endScreenElement.style.display !== 'none' && playAgainButton.style.display !== 'none' && !playAgainButton.disabled) {
+                    playAgainButton.click();
+                }
+            }
+        });
+
+        function startGame() {
+            studentName = studentNameInputElement.value || "תלמיד/ה אמיצ/ה";
+            totalQuestionsSelected = parseInt(numQuestionsSelectElement.value);
+
+            score = 0;
+            currentQuestionNumber = 0;
+            scoreElement.textContent = score;
+            totalQuestionCountElement.textContent = totalQuestionsSelected;
+            
+            setupScreenElement.style.display = 'none';
+            endScreenElement.style.display = 'none';
+            gameScreenElement.style.display = 'block';
+
+            startTimer();
+            generateQuestion(); 
+        }
+
+        function endGame() {
+            const elapsedSeconds = stopTimer();
+            
+            endStudentNameElement.textContent = studentName;
+            endTotalQuestionsElement.textContent = totalQuestionsSelected;
+            endScoreElement.textContent = score;
+            endTotalPossibleScoreElement.textContent = totalQuestionsSelected;
+            endTimeElement.textContent = formatTime(elapsedSeconds);
+
+            gameScreenElement.style.display = 'none';
+            endScreenElement.style.display = 'flex'; 
+            playAgainButton.focus();
+        }
+        
+        function resetToSetup() {
+            setupScreenElement.style.display = 'flex'; 
+            gameScreenElement.style.display = 'none';
+            endScreenElement.style.display = 'none';
+            
+            timerDisplayElement.textContent = "00:00";
+            currentDifficultyIndex = 1; 
+            difficultyDisplayTextElement.textContent = DIFFICULTY_LEVELS[currentDifficultyIndex].name;
+            easierButton.disabled = false;
+            harderButton.disabled = false;
+
+            startGameButton.focus();
+        }
+
+        async function initGame() {
+            for (let i = 5; i <= 20; i++) {
+                const option = document.createElement('option');
+                option.value = i;
+                option.textContent = i;
+                if (i === 10) option.selected = true;
+                numQuestionsSelectElement.appendChild(option);
+            }
+
+            const resumeAudio = () => {
+                if (audioContext.state === 'suspended') {
+                    audioContext.resume().catch(err => console.error("Error resuming AudioContext on initial interaction:", err));
+                }
+                document.body.removeEventListener('click', resumeAudio);
+                document.body.removeEventListener('keypress', resumeAudio);
+            };
+            document.body.addEventListener('click', resumeAudio);
+            document.body.addEventListener('keypress', resumeAudio);
+
+            correctSoundBuffer = await loadSound('/correct.mp3');
+            incorrectSoundBuffer = await loadSound('/incorrect.mp3');
+            
+            startGameButton.addEventListener('click', startGame);
+            playAgainButton.addEventListener('click', resetToSetup);
+            
+            resetToSetup(); 
+        }
+
+        initGame();
+    </script>
+</body>
+</html>
